@@ -763,7 +763,9 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
                 sleep(5)
               end
               print_statement("Calculating annual iluminance for window group '#{wg}', state: #{wgXMLs.index(wgXMLs[i])} (BSDF filename: '#{wgXMLs[i].split[0]}'):", runner)
-              rad_command = "dctimestep output/dc/#{wg}.vmx bsdf/#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -fa -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
+              #BSDF path here
+              bsdf_path = "C:/Users/EricAdmin/OpenStudio/Measures/RadianceMeasure/BSDFs/"
+              rad_command = "dctimestep output/dc/#{wg}.vmx #{bsdf_path}my#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -fa -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
               ### orig ^^^
               ###rad_command = "dctimestep output/dc/#{wg}.vmx bsdf/#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -ff -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
               exec_statement(rad_command, runner)
