@@ -44,6 +44,16 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
     args = OpenStudio::Ruleset::OSArgumentVector.new
 
     chs = OpenStudio::StringVector.new
+    chs << 'None'
+    chs << 'Fixed Slats'
+    chs << 'Daylight Redistribution'
+    complex_fen = OpenStudio::Ruleset::OSArgument::makeChoiceArgument('complex_fen', chs, true)
+    complex_fen.setDisplayName('Complex Fenstration')
+    complex_fen.setDefaultValue('None')
+    complex_fen.setDescription('Set global complex fenstration')
+    args << complex_fen
+    
+    chs = OpenStudio::StringVector.new
     chs << 'Yes'
     chs << 'No'
     apply_schedules = OpenStudio::Ruleset::OSArgument::makeChoiceArgument('apply_schedules', chs, true)
@@ -156,6 +166,7 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
     end
 
     # assign the user inputs to variables
+    complex_fen = runner.getStringArgumentValue('complex_fen', user_arguments)    
     apply_schedules = runner.getStringArgumentValue('apply_schedules', user_arguments)    
     use_cores = runner.getStringArgumentValue('use_cores', user_arguments)
     rad_settings = runner.getStringArgumentValue('rad_settings', user_arguments)
