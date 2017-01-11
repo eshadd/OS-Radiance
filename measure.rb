@@ -47,11 +47,21 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
     chs << 'None'
     chs << 'Fixed Slats'
     chs << 'Daylight Redistribution'
-    complex_fen = OpenStudio::Ruleset::OSArgument::makeChoiceArgument('complex_fen', chs, true)
-    complex_fen.setDisplayName('Complex Fenstration')
-    complex_fen.setDefaultValue('None')
-    complex_fen.setDescription('Set global complex fenstration')
-    args << complex_fen
+    complex_fen_unshd = OpenStudio::Ruleset::OSArgument::makeChoiceArgument('complex_fen_unshd', chs, true)
+    complex_fen_unshd.setDisplayName('Complex Fenstration - Unshaded State')
+    complex_fen_unshd.setDefaultValue('None')
+    complex_fen_unshd.setDescription('Set global complex fenstration for the unshaded state')
+    args << complex_fen_unshd
+    
+    chs = OpenStudio::StringVector.new
+    chs << 'None'
+    chs << 'Fixed Slats with Roller Shade'
+    chs << 'Daylight Redistribution with Roller Shade'
+    complex_fen_shd = OpenStudio::Ruleset::OSArgument::makeChoiceArgument('complex_fen_shd', chs, true)
+    complex_fen_shd.setDisplayName('Complex Fenstration - Shaded State')
+    complex_fen_shd.setDefaultValue('None')
+    complex_fen_shd.setDescription('Set global complex fenstration for the shaded state')
+    args << complex_fen_shd
     
     chs = OpenStudio::StringVector.new
     chs << 'Yes'
@@ -166,7 +176,8 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
     end
 
     # assign the user inputs to variables
-    complex_fen = runner.getStringArgumentValue('complex_fen', user_arguments)    
+    complex_fen_unshd = runner.getStringArgumentValue('complex_fen_unshd', user_arguments)    
+    complex_fen_shd = runner.getStringArgumentValue('complex_fen_shd', user_arguments)    
     apply_schedules = runner.getStringArgumentValue('apply_schedules', user_arguments)    
     use_cores = runner.getStringArgumentValue('use_cores', user_arguments)
     rad_settings = runner.getStringArgumentValue('rad_settings', user_arguments)
@@ -763,9 +774,9 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
                 sleep(5)
               end
               print_statement("Calculating annual iluminance for window group '#{wg}', state: #{wgXMLs.index(wgXMLs[i])} (BSDF filename: '#{wgXMLs[i].split[0]}'):", runner)
-              #BSDF path here
+              # BSDF path here
               bsdf_path = "C:/Users/EricAdmin/OpenStudio/Measures/RadianceMeasure/BSDFs/"
-              rad_command = "dctimestep output/dc/#{wg}.vmx #{bsdf_path}my#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -fa -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
+              rad_command = "dctimestep output/dc/#{wg}.vmx #{bsdf_path}#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -fa -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
               ### orig ^^^
               ###rad_command = "dctimestep output/dc/#{wg}.vmx bsdf/#{wgXMLs[i].strip} output/dc/#{wg}.dmx annual-sky.mtx | rmtxop -ff -c 47.4 120 11.6 - > output/ts/#{wg}_#{wgXMLs.index(wgXMLs[i])}.ill"
               exec_statement(rad_command, runner)
@@ -2152,8 +2163,47 @@ class RadianceMeasure < OpenStudio::Ruleset::ModelUserScript
     end
 
     print_statement("Warning: 'Cleanup data' option was selected; will delete ancilary Radiance data and all Radiance input files, post-simulation.",runner) if debug_mode && cleanup_data
+    
+    def setBSDFs(complex_fen_unshd, complex_fen_shd, runner)
+
+      # XMLs vs complex fenstration type
+      cpxfen_xml_by_type = {
+        'None' => 'myair.xml',
+        'Fixed Slats' => 'myblinds.xml',
+        'Daylight Redistribution' => 'my1xliloX.xml',
+        'None' => 'myair.xml',
+        'Fixed Slats with Roller Shade' => 'myblinds.xml',
+        'Daylight Redistribution with Roller Shade' => 'my1xliloX.xml'
+      }
+      
+      # substitute user-specified BSDFs  
+      
+      # read
+      map_specs = []
+      windowMaps = File.open("bsdf/mapping.rad")
+      windowMaps.each do |row|
+        if row[-4..-2].to_s == "xml"
+          wg_specs = row.split(",")
+          wg_specs[4] = cpxfen_xml_by_type[complex_fen_unshd]
+          wg_specs[5] = cpxfen_xml_by_type[complex_fen_shd]
+          row = wg_specs.join(",")
+        end
+        map_specs << row
+      end
+      windowMaps.close
+      
+      # write
+      windowMaps = File.open("bsdf/mapping.rad", "w")
+      map_specs.each do |row|
+        windowMaps.write(row)
+      end
+      windowMaps.close
+          
+    end
 
     # get the daylight coefficient matrices
+    #!mapping.rad rewritten here
+    setBSDFs(complex_fen_unshd, complex_fen_shd, runner)
     calculateDaylightCoeffecients(radPath, sim_cores, catCommand, options_tregVars, 
     options_klemsDensity, options_skyvecDensity, options_dmx, options_vmx, rad_settings, procsUsed, runner, debug_mode)
 

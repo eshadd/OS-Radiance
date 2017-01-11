@@ -2,8 +2,8 @@
   <schema_version>3.0</schema_version>
   <name>radiance_measure</name>
   <uid>723e6c8e-fb4d-4f29-b1df-d91839d8e821</uid>
-  <version_id>5a267ed0-0942-40b1-87dc-57d22ebc11ee</version_id>
-  <version_modified>20170109T215952Z</version_modified>
+  <version_id>dca2705a-7031-4240-bf8d-62c0bcd5914e</version_id>
+  <version_modified>20170111T015127Z</version_modified>
   <xml_checksum>381B7733</xml_checksum>
   <class_name>RadianceMeasure</class_name>
   <display_name>Radiance Daylighting Measure</display_name>
@@ -11,9 +11,9 @@
   <modeler_description>The OpenStudio model is converted to Radiance format. All spaces containing daylighting objects (illuminance map, daylighting control point, and optionally glare sensors) will have annual illuminance calculated using Radiance, and the OS model's lighting schedules can be overwritten with those based on daylight responsive lighting controls.</modeler_description>
   <arguments>
     <argument>
-      <name>complex_fen</name>
-      <display_name>Complex Fenstration</display_name>
-      <description>Set global complex fenstration</description>
+      <name>complex_fen_unshd</name>
+      <display_name>Complex Fenstration - Unshaded State</display_name>
+      <description>Set global complex fenstration for the unshaded state</description>
       <type>Choice</type>
       <required>true</required>
       <model_dependent>false</model_dependent>
@@ -30,6 +30,29 @@
         <choice>
           <value>Daylight Redistribution</value>
           <display_name>Daylight Redistribution</display_name>
+        </choice>
+      </choices>
+    </argument>
+    <argument>
+      <name>complex_fen_shd</name>
+      <display_name>Complex Fenstration - Shaded State</display_name>
+      <description>Set global complex fenstration for the shaded state</description>
+      <type>Choice</type>
+      <required>true</required>
+      <model_dependent>false</model_dependent>
+      <default_value>None</default_value>
+      <choices>
+        <choice>
+          <value>None</value>
+          <display_name>None</display_name>
+        </choice>
+        <choice>
+          <value>Fixed Slats with Roller Shade</value>
+          <display_name>Fixed Slats with Roller Shade</display_name>
+        </choice>
+        <choice>
+          <value>Daylight Redistribution with Roller Shade</value>
+          <display_name>Daylight Redistribution with Roller Shade</display_name>
         </choice>
       </choices>
     </argument>
@@ -192,7 +215,7 @@
       <filename>measure.rb</filename>
       <filetype>rb</filetype>
       <usage_type>script</usage_type>
-      <checksum>E67332F1</checksum>
+      <checksum>80D885B9</checksum>
     </file>
   </files>
 </measure>
